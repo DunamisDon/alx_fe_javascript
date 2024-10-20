@@ -193,6 +193,39 @@ function getFilteredQuotes() {
   }
 }
 
+// Function to sync quotes between local storage and server
+async function syncQuotes() {
+  try {
+    const storedQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+    const response = await fetch(apiUrl);
+    const serverData = await response.json();
+    
+    // Check for any discrepancies between local and server quotes
+    const serverQuotes = serverData.map(item => ({
+      text: item.title,
+      category: 'Server Category'
+    }));
+
+    // Update local storage with server data, prioritize server over local
+    serverQuotes.forEach(serverQuote => {
+      const localQuoteIndex = storedQuotes.findIndex(quote => quote.text === serverQuote.text);
+      if (localQuoteIndex === -1) {
+        storedQuotes.push(serverQuote); // Add new quote from server
+      } else {
+        // Conflict resolution: server data takes precedence
+        storedQuotes[localQuoteIndex] = serverQuote;  
+      }
+    });
+
+    localStorage.setItem('quotes', JSON.stringify(storedQuotes)); // Save updated quotes to local storage
+    quotes = storedQuotes;  // Update the quotes array in memory
+    alert('Quotes synced with server!');
+    populateCategories();  // Refresh categories
+  } catch (error) {
+    console.error('Error syncing quotes:', error);
+  }
+}
+
 // Event listener for "Show New Quote" button
 document.getElementById('newQuote').addEventListener('click', showRandomQuote);
 
@@ -202,6 +235,6 @@ window.onload = function() {
   loadLastViewedQuote() || showRandomQuote();
   fetchQuotesFromServer();  // Initial fetch from server on load
 
-  // Periodically fetch new quotes from the server every 30 seconds
-  setInterval(fetchQuotesFromServer, 30000);
+  // Periodically sync quotes with the server every 30 seconds
+  setInterval(syncQuotes, 30000);
 };
