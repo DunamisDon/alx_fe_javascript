@@ -25,7 +25,7 @@ function saveQuotes() {
 }
 
 // Function to simulate fetching data from a server
-async function fetchServerQuotes() {
+async function fetchQuotesFromServer() {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -176,8 +176,8 @@ document.getElementById('newQuote').addEventListener('click', showRandomQuote);
 window.onload = function() {
   loadQuotes();
   loadLastViewedQuote() || showRandomQuote();
-  fetchServerQuotes();  // Initial fetch from server on load
+  fetchQuotesFromServer();  // Initial fetch from server on load
 
   // Periodically fetch new quotes from the server every 30 seconds
-  setInterval(fetchServerQuotes, 30000);
+  setInterval(fetchQuotesFromServer, 30000);
 };
