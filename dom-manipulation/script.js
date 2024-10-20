@@ -1,6 +1,9 @@
 let quotes = [];
 let categories = [];
 
+// Mock API endpoint for simulating server interactions
+const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
 // Function to load quotes from local storage or initialize with default quotes
 function loadQuotes() {
   const storedQuotes = localStorage.getItem('quotes');
@@ -19,6 +22,47 @@ function loadQuotes() {
 // Function to save the current quotes array to local storage
 function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
+}
+
+// Function to simulate fetching data from a server
+async function fetchServerQuotes() {
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    
+    // Simulating server quotes as an array of objects with text and category
+    const serverQuotes = data.slice(0, 5).map(item => ({
+      text: item.title,
+      category: 'Server Category'
+    }));
+
+    resolveConflicts(serverQuotes);  // Resolve any conflicts with local quotes
+  } catch (error) {
+    console.error('Error fetching data from server:', error);
+  }
+}
+
+// Function to resolve conflicts between local and server data
+function resolveConflicts(serverQuotes) {
+  let updated = false;
+
+  serverQuotes.forEach(serverQuote => {
+    const localQuoteIndex = quotes.findIndex(quote => quote.text === serverQuote.text);
+    if (localQuoteIndex === -1) {
+      quotes.push(serverQuote);  // Add new quote from server
+      updated = true;
+    } else {
+      // Conflict resolution: server data takes precedence
+      quotes[localQuoteIndex] = serverQuote;  
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    saveQuotes();  // Save updated quotes to local storage
+    alert('Quotes updated from server!');
+    populateCategories();  // Refresh categories
+  }
 }
 
 // Function to display a random quote from the array
@@ -132,4 +176,8 @@ document.getElementById('newQuote').addEventListener('click', showRandomQuote);
 window.onload = function() {
   loadQuotes();
   loadLastViewedQuote() || showRandomQuote();
+  fetchServerQuotes();  // Initial fetch from server on load
+
+  // Periodically fetch new quotes from the server every 30 seconds
+  setInterval(fetchServerQuotes, 30000);
 };
