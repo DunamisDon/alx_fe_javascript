@@ -88,14 +88,38 @@ function createAddQuoteForm() {
   const newQuoteCategory = document.getElementById('newQuoteCategory').value;
 
   if (newQuoteText.trim() !== "" && newQuoteCategory.trim() !== "") {
-    quotes.push({ text: newQuoteText, category: newQuoteCategory });
-    document.getElementById('newQuoteText').value = "";
-    document.getElementById('newQuoteCategory').value = "";
+    const newQuote = { text: newQuoteText, category: newQuoteCategory };
+    quotes.push(newQuote);
     saveQuotes();
     populateCategories();  // Update categories with any new ones
     showRandomQuote();
+    postQuoteToServer(newQuote);  // POST new quote to the server
+    document.getElementById('newQuoteText').value = "";
+    document.getElementById('newQuoteCategory').value = "";
   } else {
     alert("Please enter both quote and category.");
+  }
+}
+
+// Function to post new quotes to the server
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch(apiUrl, {
+      method: 'POST', // Use POST method to send data
+      headers: {
+        'Content-Type': 'application/json', // Specify the content type
+      },
+      body: JSON.stringify(quote), // Send the quote as JSON
+    });
+
+    if (response.ok) {
+      const serverResponse = await response.json();
+      console.log('Quote posted to server:', serverResponse);
+    } else {
+      console.error('Failed to post quote to server:', response.status);
+    }
+  } catch (error) {
+    console.error('Error posting quote to server:', error);
   }
 }
 
